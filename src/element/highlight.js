@@ -3,6 +3,16 @@ import TextNode from '../lib/text_node'
 import { getTouchPosition, inRectangle, anyToPx, rectToPointArray } from '../lib/helpers'
 import { EasyMarkerMode, NoteType } from '../lib/types'
 
+function detachVoid(obj, strict) {
+  return Object.keys(obj)
+    .filter(key => (strict ? !!obj[key] : obj[key] !== void 0))
+    .reduce((acc, key) => {
+      acc[key] = obj[key]
+
+      return acc
+    }, {})
+}
+
 /**
  * Highlight
  *
@@ -152,9 +162,9 @@ export default class Highlight extends BaseElement {
       const type = line.meta.type || this.type
       line.points.forEach((points, index) => {
         if (type === NoteType.UNDERLINE) {
-          this.element.appendChild(this.createLine(points))
+          this.element.appendChild(this.createLine(points, line.meta.theme))
         } else {
-          this.element.appendChild(this.createRectangle(points))
+          this.element.appendChild(this.createRectangle(points, line.meta.theme))
         }
         if (line.points.length - 1 === index && line.meta && line.meta.tag) {
           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
@@ -243,7 +253,7 @@ export default class Highlight extends BaseElement {
     this.element = svg
   }
 
-  createLine(pointList) {
+  createLine(pointList, theme) {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
     if (!pointList[2] || !pointList[3]) return line;
 
@@ -251,8 +261,12 @@ export default class Highlight extends BaseElement {
     const y1 = pointList[2][1] + 1
     const x2 = pointList[3][0]
     const y2 = pointList[3][1] + 1
-    line.style.stroke = this.option.underlineColor
-    line.style.strokeWidth = this.option.underlineWidth
+    const themeObj = this.option.underlineTheme && this.option.underlineTheme[theme || 'main'] || detachVoid({
+      stroke: this.option.underlineColor,
+      strokeWidth: this.option.underlineWidth,
+      strokeDasharray: this.option.underlineDasharray
+    });
+    Object.assign(line.style, themeObj);
     line.setAttribute('x1', x1)
     line.setAttribute('y1', y1)
     line.setAttribute('x2', x2)
@@ -260,13 +274,16 @@ export default class Highlight extends BaseElement {
     return line
   }
 
-  createRectangle(pointList) {
+  createRectangle(pointList, theme) {
     const points = pointList.reduce((acc, [x, y]) => (acc === '' ? `${x},${y}` : `${acc} ${x},${y}`), '')
     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-    polygon.style.fill = this.option.highlightColor
     polygon.style.strokeWidth = 0
-    polygon.style.strokeOpacity = this.option.opacity
-    polygon.style.opacity = this.option.opacity
+    const themeObj = this.option.fillTheme && this.option.fillTheme[theme || 'main'] || detachVoid({
+      fill: this.option.highlightColor,
+      strokeOpacity: this.option.opacity,
+      opacity: this.option.opacity,
+    });
+    Object.assign(polygon.style, themeObj)
     polygon.setAttribute('points', points)
     return polygon
   }
