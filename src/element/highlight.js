@@ -292,19 +292,21 @@ export default class Highlight extends BaseElement {
     const { x, y } = getTouchPosition(e)
     const { top, left } = this.container.getBoundingClientRect()
     let clickLine
+    const matchLines = []
     this.lineMap.forEach((line, id) => {
       for (let i = 0; i < line.relativeRects.length; i++) {
         const rect = line.relativeRects[i]
         const margin = line.lineHeight ? (line.lineHeight - rect.height) / 2 : 0
         if (inRectangle(x - left, y - top, rect, margin)) {
           clickLine = { id, line }
+          matchLines.push(line)
           break
         }
       }
     })
     if (clickLine && this.easyMarker) {
       if (this.easyMarker.highlightLineClick) {
-        this.easyMarker.highlightLineClick(clickLine.id, clickLine.line.meta, clickLine.line.selection, e)
+        this.easyMarker.highlightLineClick(clickLine.id, clickLine.line.meta, clickLine.line.selection, e, matchLines)
       } else {
         this.easyMarker.showHighlightMenu(clickLine.line.selection, { id: clickLine.id, meta: clickLine.line.meta })
       }
