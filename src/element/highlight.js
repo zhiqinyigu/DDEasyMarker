@@ -159,7 +159,7 @@ export default class Highlight extends BaseElement {
   render() {
     this.removeAllRectangle()
     this.lineMap.forEach((line) => {
-      const type = line.meta.type || this.type
+      const type = line.meta.renderType || line.meta.type || this.type
       line.points.forEach((points, index) => {
         if (type === NoteType.UNDERLINE) {
           this.element.appendChild(this.createLine(points, line.meta.theme))
